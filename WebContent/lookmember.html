@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Find an user</title>
+
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+</head>
+<body>
+	<h1> Please enter an eMail adress</h1>
+	<input id="input" type="text">
+	<input id="groupMembers" type="button" value="OK">
+
+
+	<table id="table" style="width:50%"></table>
+
+	<script type="text/javascript">
+		var input = $("#input");
+		$("#groupMembers")
+				.click(
+						function() {
+							$
+									.ajax({
+										type : 'GET',
+										url : 'http://localhost:8686/WSProject/meetupApp/meetup/json/user/'+input.val(),
+										contentType : 'application/json; charset=utf-8',
+										dataType : 'JSON',
+										success : function(data, status, jqXHR) {
+											var tr;
+											tr = $('<tr/>');
+											tr.append("<th>" + "Mail" + "</td>");
+									        tr.append("<th>" + "First name" + "</th>");
+									        tr.append("<th>" + "Last name" + "</th>");
+									        tr.append("<th>" + "Biography" + "</th>");
+									        $('table').append(tr);
+									        tr = $('<tr/>');
+									        tr.append("<td>" + data.mail + "</td>");
+									        tr.append("<td>" + data.firstName + "</td>");
+									        tr.append("<td>" + data.lastName + "</td>");
+									        tr.append("<td>" + data.biography + "</td>");
+									        $('table').append(tr);
+										}
+									});
+						});
+	</script>
+
+</body>
+</html>
