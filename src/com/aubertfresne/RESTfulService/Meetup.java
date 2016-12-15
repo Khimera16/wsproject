@@ -9,17 +9,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import com.aubertfresne.model.Group;
 import com.aubertfresne.model.User;
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -150,6 +146,10 @@ public class Meetup {
 	@GET
 	public Response createGroup(@QueryParam("name") String name, @QueryParam("description") String description) throws SQLException, ClassNotFoundException, URISyntaxException
 	{
+		if(usr_connected==false){
+			java.net.URI location = new java.net.URI("../signup.html");
+			return Response.temporaryRedirect(location).build();
+		} else{
 		Class.forName("org.postgresql.Driver");
 		c = DriverManager
 				.getConnection("jdbc:postgresql://localhost:5432/wsproject",
@@ -177,53 +177,59 @@ public class Meetup {
 		c.close();
 		java.net.URI location = new java.net.URI("../meetupApp/meetup/group/groups");
 		return Response.temporaryRedirect(location).build();
+		}
 	}
 	
 	@Path("group/leavegroup")
 	@GET
 	public Response leaveGroup(@QueryParam("name") String name) throws SQLException, ClassNotFoundException, URISyntaxException
 	{
-		Class.forName("org.postgresql.Driver");
-		c = DriverManager
-				.getConnection("jdbc:postgresql://localhost:5432/wsproject",
-						"postgres", "postgres");
-		stmt = c.createStatement();
-		ResultSet rs = stmt.executeQuery( "SELECT * FROM wsuser WHERE wsuser.usr_mail='"+user.getMail()+"';" );
-		String usr_groups = "";
-		while ( rs.next() ) {
-			if(rs.getString("usr_groups")!=null){
-				usr_groups= rs.getString("usr_groups");
+		if(usr_connected==false){
+			java.net.URI location = new java.net.URI("../signup.html");
+			return Response.temporaryRedirect(location).build();
+		} else{
+			Class.forName("org.postgresql.Driver");
+			c = DriverManager
+					.getConnection("jdbc:postgresql://localhost:5432/wsproject",
+							"postgres", "postgres");
+			stmt = c.createStatement();
+			ResultSet rs = stmt.executeQuery( "SELECT * FROM wsuser WHERE wsuser.usr_mail='"+user.getMail()+"';" );
+			String usr_groups = "";
+			while ( rs.next() ) {
+				if(rs.getString("usr_groups")!=null){
+					usr_groups= rs.getString("usr_groups");
+				}
+	
 			}
-
-		}
-		String groups = usr_groups.replace(","+name, "");
-		rs.close();
-		stmt.close();
-		stmt = c.createStatement();
-		String sql = "UPDATE wsuser set usr_groups = '"+groups+"' WHERE wsuser.usr_mail= '"+user.getMail()+"';";
-		stmt.executeUpdate(sql);
-		stmt.close();
-		
-		stmt = c.createStatement();
-		rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
-		String grp_members = "";
-		while ( rs.next() ) {
-			if(rs.getString("grp_members")!=null){
-				grp_members= rs.getString("grp_members");
+			String groups = usr_groups.replace(","+name, "");
+			rs.close();
+			stmt.close();
+			stmt = c.createStatement();
+			String sql = "UPDATE wsuser set usr_groups = '"+groups+"' WHERE wsuser.usr_mail= '"+user.getMail()+"';";
+			stmt.executeUpdate(sql);
+			stmt.close();
+			
+			stmt = c.createStatement();
+			rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
+			String grp_members = "";
+			while ( rs.next() ) {
+				if(rs.getString("grp_members")!=null){
+					grp_members= rs.getString("grp_members");
+				}
+	
 			}
-
+			String members = grp_members.replace(","+user.getMail(), "");
+			rs.close();
+			stmt.close();
+			stmt = c.createStatement();
+			sql = "UPDATE wsgroup set grp_members = '"+members+"' WHERE wsgroup.grp_name= '"+name+"';";
+			stmt.executeUpdate(sql);
+			stmt.close();
+			
+			c.close();
+			java.net.URI location = new java.net.URI("../meetupApp/meetup/group/usergroups");
+			return Response.temporaryRedirect(location).build();
 		}
-		String members = grp_members.replace(","+user.getMail(), "");
-		rs.close();
-		stmt.close();
-		stmt = c.createStatement();
-		sql = "UPDATE wsgroup set grp_members = '"+members+"' WHERE wsgroup.grp_name= '"+name+"';";
-		stmt.executeUpdate(sql);
-		stmt.close();
-		
-		c.close();
-		java.net.URI location = new java.net.URI("../meetupApp/meetup/group/usergroups");
-		return Response.temporaryRedirect(location).build();
 	}
 	
 	
@@ -232,116 +238,124 @@ public class Meetup {
 	@GET
 	public Response joinGroup(@QueryParam("name") String name) throws SQLException, ClassNotFoundException, URISyntaxException
 	{
-		Class.forName("org.postgresql.Driver");
-		c = DriverManager
-				.getConnection("jdbc:postgresql://localhost:5432/wsproject",
-						"postgres", "postgres");
-		stmt = c.createStatement();
-		ResultSet rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
-		String grp_members = "";
-		while ( rs.next() ) {
-			if(rs.getString("grp_members")!=null){
-				grp_members= rs.getString("grp_members");
+		if(usr_connected==false){
+			java.net.URI location = new java.net.URI("../signup.html");
+			return Response.temporaryRedirect(location).build();
+		} else{
+			Class.forName("org.postgresql.Driver");
+			c = DriverManager
+					.getConnection("jdbc:postgresql://localhost:5432/wsproject",
+							"postgres", "postgres");
+			stmt = c.createStatement();
+			ResultSet rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
+			String grp_members = "";
+			while ( rs.next() ) {
+				if(rs.getString("grp_members")!=null){
+					grp_members= rs.getString("grp_members");
+				}
+	
 			}
-
-		}
-		rs.close();
-		stmt.close();
-		stmt = c.createStatement();
-		rs = stmt.executeQuery( "SELECT * FROM wsuser WHERE wsuser.usr_mail='"+user.getMail()+"';" );
-		String usr_groups = "";
-		while ( rs.next() ) {
-			if(rs.getString("usr_groups")!=null){
-				usr_groups= rs.getString("usr_groups");
+			rs.close();
+			stmt.close();
+			stmt = c.createStatement();
+			rs = stmt.executeQuery( "SELECT * FROM wsuser WHERE wsuser.usr_mail='"+user.getMail()+"';" );
+			String usr_groups = "";
+			while ( rs.next() ) {
+				if(rs.getString("usr_groups")!=null){
+					usr_groups= rs.getString("usr_groups");
+				}
 			}
-
+			rs.close();
+			stmt.close();
+			stmt = c.createStatement();
+			String sql = "UPDATE wsgroup set grp_members = '"+grp_members + ","+user.getMail()+"' WHERE wsgroup.grp_name= '"+name+"';";
+			stmt.executeUpdate(sql);
+			stmt.close();
+			stmt = c.createStatement();
+			sql = "UPDATE wsuser set usr_groups = '"+usr_groups + ","+name+"' WHERE wsuser.usr_mail= '"+user.getMail()+"';";
+			stmt.executeUpdate(sql);
+			stmt.close();
+			c.close();
+			java.net.URI location = new java.net.URI("../meetupApp/meetup/group/groups");
+			return Response.temporaryRedirect(location).build();
 		}
-		rs.close();
-		stmt.close();
-		stmt = c.createStatement();
-		String sql = "UPDATE wsgroup set grp_members = '"+grp_members + ","+user.getMail()+"' WHERE wsgroup.grp_name= '"+name+"';";
-		stmt.executeUpdate(sql);
-		stmt.close();
-		stmt = c.createStatement();
-		sql = "UPDATE wsuser set usr_groups = '"+usr_groups + ","+name+"' WHERE wsuser.usr_mail= '"+user.getMail()+"';";
-		stmt.executeUpdate(sql);
-		stmt.close();
-		c.close();
-		java.net.URI location = new java.net.URI("../meetupApp/meetup/group/groups");
-		return Response.temporaryRedirect(location).build();
 	}
 
 	@Path("group/changedescription")
 	@GET
 	public Response changeGroupDescription(@QueryParam("name") String name, @QueryParam("description") String description) throws SQLException, ClassNotFoundException, URISyntaxException
 	{
-		Class.forName("org.postgresql.Driver");
-		c = DriverManager
-				.getConnection("jdbc:postgresql://localhost:5432/wsproject",
-						"postgres", "postgres");
-		stmt = c.createStatement();
-		ResultSet rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
-		boolean isAuthorized = false;
-		while ( rs.next() ) {
-			if((user.getMail()).equals(rs.getString("grp_admin"))){
-				isAuthorized = true;
+		if(usr_connected==false){
+			java.net.URI location = new java.net.URI("../signup.html");
+			return Response.temporaryRedirect(location).build();
+		} else{
+			Class.forName("org.postgresql.Driver");
+			c = DriverManager
+					.getConnection("jdbc:postgresql://localhost:5432/wsproject",
+							"postgres", "postgres");
+			stmt = c.createStatement();
+			ResultSet rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
+			boolean isAuthorized = false;
+			while ( rs.next() ) {
+				if((user.getMail()).equals(rs.getString("grp_admin"))){
+					isAuthorized = true;
+				}
+			}
+			rs.close();
+			stmt.close();
+	
+			if(isAuthorized==true){
+				stmt = c.createStatement();
+				String sql = "UPDATE wsgroup set grp_description = '"+description+"' WHERE wsgroup.grp_name= '"+name+"';";
+				stmt.executeUpdate(sql);
+				stmt.close();
+				c.close();
+				java.net.URI location = new java.net.URI("../meetupApp/meetup/group/groups");
+				return Response.temporaryRedirect(location).build();
+			}else{
+				java.net.URI location = new java.net.URI("../profile.html");
+				return Response.temporaryRedirect(location).build();
 			}
 		}
-		rs.close();
-		stmt.close();
-
-		if(isAuthorized==true){
-			stmt = c.createStatement();
-			String sql = "UPDATE wsgroup set grp_description = '"+description+"' WHERE wsgroup.grp_name= '"+name+"';";
-			stmt.executeUpdate(sql);
-			stmt.close();
-			c.close();
-			java.net.URI location = new java.net.URI("../meetupApp/meetup/group/groups");
-			return Response.temporaryRedirect(location).build();
-		}else{
-			java.net.URI location = new java.net.URI("../profile.html");
-			return Response.temporaryRedirect(location).build();
-		}
-
-
-
 	}
 
 	@Path("group/deletegroup")
 	@GET
 	public Response deleteGroup(@QueryParam("name") String name) throws SQLException, ClassNotFoundException, URISyntaxException
 	{
-		Class.forName("org.postgresql.Driver");
-		c = DriverManager
-				.getConnection("jdbc:postgresql://localhost:5432/wsproject",
-						"postgres", "postgres");
-		stmt = c.createStatement();
-		ResultSet rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
-		boolean isAuthorized = false;
-		while ( rs.next() ) {
-			if((user.getMail()).equals(rs.getString("grp_admin"))){
-				isAuthorized = true;
+		if(usr_connected==false){
+			java.net.URI location = new java.net.URI("../signup.html");
+			return Response.temporaryRedirect(location).build();
+		} else{
+			Class.forName("org.postgresql.Driver");
+			c = DriverManager
+					.getConnection("jdbc:postgresql://localhost:5432/wsproject",
+							"postgres", "postgres");
+			stmt = c.createStatement();
+			ResultSet rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
+			boolean isAuthorized = false;
+			while ( rs.next() ) {
+				if((user.getMail()).equals(rs.getString("grp_admin"))){
+					isAuthorized = true;
+				}
+			}
+			rs.close();
+			stmt.close();
+	
+			if(isAuthorized==true){
+				stmt = c.createStatement();
+				String sql = "DELETE FROM wsgroup WHERE wsgroup.grp_name= '"+name+"';";
+				stmt.executeUpdate(sql);
+				stmt.close();
+				c.close();
+				c.close();
+				java.net.URI location = new java.net.URI("../meetupApp/meetup/group/groups");
+				return Response.temporaryRedirect(location).build();
+			}else{
+				java.net.URI location = new java.net.URI("../profile.html");
+				return Response.temporaryRedirect(location).build();
 			}
 		}
-		rs.close();
-		stmt.close();
-
-		if(isAuthorized==true){
-			stmt = c.createStatement();
-			String sql = "DELETE FROM wsgroup WHERE wsgroup.grp_name= '"+name+"';";
-			stmt.executeUpdate(sql);
-			stmt.close();
-			c.close();
-			c.close();
-			java.net.URI location = new java.net.URI("../meetupApp/meetup/group/groups");
-			return Response.temporaryRedirect(location).build();
-		}else{
-			java.net.URI location = new java.net.URI("../profile.html");
-			return Response.temporaryRedirect(location).build();
-		}
-
-
-
 	}
 
 	@Path("user/signup")
@@ -437,27 +451,31 @@ public class Meetup {
 	@GET
 	public Response commentBoard( @QueryParam("name") String name, @QueryParam("comment") String comment) throws SQLException, ClassNotFoundException, URISyntaxException
 	{
-		Class.forName("org.postgresql.Driver");
-		c = DriverManager
-				.getConnection("jdbc:postgresql://localhost:5432/wsproject",
-						"postgres", "postgres");
-		stmt = c.createStatement();
-		ResultSet rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
-		String dashboard = "";
-		while ( rs.next() ) {
-			dashboard = rs.getString("grp_discboard");
+		if(usr_connected==false){
+			java.net.URI location = new java.net.URI("../signup.html");
+			return Response.temporaryRedirect(location).build();
+		} else{
+			Class.forName("org.postgresql.Driver");
+			c = DriverManager
+					.getConnection("jdbc:postgresql://localhost:5432/wsproject",
+							"postgres", "postgres");
+			stmt = c.createStatement();
+			ResultSet rs = stmt.executeQuery( "SELECT * FROM wsgroup WHERE wsgroup.grp_name='"+name+"';" );
+			String dashboard = "";
+			while ( rs.next() ) {
+				dashboard = rs.getString("grp_discboard");
+			}
+			rs.close();
+			stmt.close();
+			stmt = c.createStatement();
+			String newBoard = dashboard + "|" + user.getFirstName() +" " + user.getLastName() + " : "+comment;
+			String sql = "UPDATE wsgroup set grp_discboard = '"+newBoard+"' WHERE wsgroup.grp_name= '"+name+"';";
+			stmt.executeUpdate(sql);
+			stmt.close();
+			c.close();
+			java.net.URI location = new java.net.URI("../profile.html");
+			return Response.temporaryRedirect(location).build();
 		}
-		rs.close();
-		stmt.close();
-		stmt = c.createStatement();
-		String newBoard = dashboard + "|" + user.getFirstName() +" " + user.getLastName() + " : "+comment;
-		String sql = "UPDATE wsgroup set grp_discboard = '"+newBoard+"' WHERE wsgroup.grp_name= '"+name+"';";
-		stmt.executeUpdate(sql);
-		stmt.close();
-		c.close();
-		java.net.URI location = new java.net.URI("../profile.html");
-		return Response.temporaryRedirect(location).build();
-
 	}
 
 	@Path("user/deleteuser")
